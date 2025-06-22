@@ -25,16 +25,17 @@ class Signup(Resource):
         try:
             new_user = User(
                 username=username,
+                password=password, # Pass the password to the __init__ method
                 image_url=image_url,
                 bio=bio
             )
-            new_user.password_hash = password
-
+            # The __init__ handles setting new_user.password_hash
+            
             db.session.add(new_user)
             db.session.commit()
 
             session['user_id'] = new_user.id
-            # Explicitly exclude recipes when serializing User for response
+            # Exclude recipes when serializing User for response to prevent circular reference
             return make_response(new_user.to_dict(rules=('-recipes',)), 201)
 
         except ValueError as e:
@@ -53,7 +54,7 @@ class CheckSession(Resource):
         if user_id:
             user = User.query.get(user_id)
             if user:
-                # Explicitly exclude recipes when serializing User for response
+                # Exclude recipes when serializing User for response
                 return make_response(user.to_dict(rules=('-recipes',)), 200)
         return make_error_response("Unauthorized", 401)
 
@@ -67,7 +68,7 @@ class Login(Resource):
 
         if user and user.authenticate(password):
             session['user_id'] = user.id
-            # Explicitly exclude recipes when serializing User for response
+            # Exclude recipes when serializing User for response
             return make_response(user.to_dict(rules=('-recipes',)), 200)
         else:
             return make_error_response("Invalid username or password", 401)
@@ -88,7 +89,7 @@ class RecipeIndex(Resource):
             return make_error_response("Unauthorized", 401)
 
         recipes = Recipe.query.all()
-        # This already handles the nested user without its recipes via Recipe's serialize_rules
+        # Use to_dict with rules to include nested user data (without user's recipes)
         return make_response([recipe.to_dict(rules=('user',)) for recipe in recipes], 200)
 
     def post(self):
@@ -106,7 +107,7 @@ class RecipeIndex(Resource):
                 title=title,
                 instructions=instructions,
                 minutes_to_complete=minutes_to_complete,
-                user_id=user_id
+                user_id=user_id # Assign the logged-in user's ID
             )
             db.session.add(new_recipe)
             db.session.commit()
