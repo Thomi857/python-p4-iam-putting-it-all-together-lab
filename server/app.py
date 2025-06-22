@@ -29,13 +29,12 @@ class Signup(Resource):
                 image_url=image_url,
                 bio=bio
             )
-            # The __init__ handles setting new_user.password_hash
-            
+
             db.session.add(new_user)
             db.session.commit()
 
             session['user_id'] = new_user.id
-            # Exclude recipes when serializing User for response to prevent circular reference
+
             return make_response(new_user.to_dict(rules=('-recipes',)), 201)
 
         except ValueError as e:
@@ -54,7 +53,7 @@ class CheckSession(Resource):
         if user_id:
             user = User.query.get(user_id)
             if user:
-                # Exclude recipes when serializing User for response
+
                 return make_response(user.to_dict(rules=('-recipes',)), 200)
         return make_error_response("Unauthorized", 401)
 
@@ -68,7 +67,7 @@ class Login(Resource):
 
         if user and user.authenticate(password):
             session['user_id'] = user.id
-            # Exclude recipes when serializing User for response
+            
             return make_response(user.to_dict(rules=('-recipes',)), 200)
         else:
             return make_error_response("Invalid username or password", 401)
@@ -78,7 +77,7 @@ class Logout(Resource):
         user_id = session.get('user_id')
         if user_id:
             session.pop('user_id', None)
-            return make_response({}, 204) # No Content
+            return make_response({}, 204) 
         else:
             return make_error_response("Unauthorized", 401)
 
@@ -89,7 +88,7 @@ class RecipeIndex(Resource):
             return make_error_response("Unauthorized", 401)
 
         recipes = Recipe.query.all()
-        # Use to_dict with rules to include nested user data (without user's recipes)
+
         return make_response([recipe.to_dict(rules=('user',)) for recipe in recipes], 200)
 
     def post(self):
@@ -107,12 +106,11 @@ class RecipeIndex(Resource):
                 title=title,
                 instructions=instructions,
                 minutes_to_complete=minutes_to_complete,
-                user_id=user_id # Assign the logged-in user's ID
+                user_id=user_id 
             )
             db.session.add(new_recipe)
             db.session.commit()
 
-            # Include the user data in the response as per lab instructions
             return make_response(new_recipe.to_dict(rules=('user',)), 201)
 
         except ValueError as e:

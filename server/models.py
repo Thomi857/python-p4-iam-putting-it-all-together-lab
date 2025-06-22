@@ -38,12 +38,7 @@ class User(db.Model, SerializerMixin):
     def authenticate(self, password):
         return bcrypt.check_password_hash(self._password_hash.encode('utf-8'), password.encode('utf-8'))
 
-    # >>>>>>>>>>>>>>> TEMPORARILY COMMENT OUT THIS VALIDATOR <<<<<<<<<<<<<<<
-    # @validates('username')
-    # def validate_username(self, key, username):
-    #     if not username:
-    #         raise ValueError("Username must be present.")
-    #     return username
+
 
     def __repr__(self):
         return f'<User {self.username}>'
